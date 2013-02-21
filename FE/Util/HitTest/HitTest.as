@@ -1,0 +1,166 @@
+package com.fantage.module.FE.Util.HitTest
+{
+	import com.fantage.module.FE.Component.Extended.MovieClipRenderComponent;
+	import com.fantage.module.FE.Entity.iEntity;
+	
+	import flash.geom.Point;
+	import flash.geom.Rectangle;
+
+	public class HitTest
+	{
+		public function HitTest()
+		{
+		}
+		
+		public function rectHitTest( $rect1:Rectangle, $rect2:Rectangle ):Boolean{
+			return $rect1.intersects($rect2);
+		}
+		
+		public function circleRectHitTest( $circle:iEntity, $rect:iEntity):Boolean{
+	//	trace( "TEST:", $circle.name,$circle.getSpatial().position,  "RECT:", $rect.name, $rect.getSpatial().position, $rect.getSpatial().hitSize);
+			var circleCenter:Point = $circle.getSpatial().position;
+			var radius:Number = $circle.getSpatial().hitRadius * $circle.getRender().displayObject.scaleX;
+			var center:Point = $rect.getSpatial().position;
+			var rect:Point = $rect.getSpatial().hitSize;
+			var angle:Number = $rect.getSpatial().rotation * Math.PI / 180;
+			var cos:Number = Math.cos( angle );
+			var sin:Number = Math.sin( angle );
+			
+			var x1:Number = - rect.x/2;
+			var x2:Number = rect.x/2;
+			var y1:Number = rect.y/2;
+			var y2:Number = - rect.y/2; 
+			
+			var topLeft:Point = new Point();
+			topLeft = ($rect.getRender() as MovieClipRenderComponent).clip.tl_.localToGlobal(topLeft);
+			var topRight:Point = new Point();
+			topRight = ($rect.getRender() as MovieClipRenderComponent).clip.tr_.localToGlobal(topRight);
+			var botLeft:Point = new Point();
+			botLeft = ($rect.getRender() as MovieClipRenderComponent).clip.bl_.localToGlobal(botLeft);
+			var botRight:Point = new Point();
+			botRight = ($rect.getRender() as MovieClipRenderComponent).clip.br_.localToGlobal(botRight);
+			
+			var reverseAngle:Number =  ( -$rect.getSpatial().rotation + 360) * Math.PI / 180;
+	//		var circleOrigin:Point = getTranslatedPoint( center, Math.cos(-reverseAngle), Math.sin(-reverseAngle), circleCenter.x, circleCenter.y );
+			var pointRect:Boolean = pointRectHitTest( circleCenter, radius, new Point( center.x+x1,center.y+y1),new Point( center.x+x2,center.y+y1),new Point( center.x+x1,center.y+y2),new Point( center.x+x2,center.y+y2) );
+			var circleTLTR:Boolean = circleLineHitTest( circleCenter, radius, topLeft, topRight ) ;
+			var circleTRBR:Boolean = circleLineHitTest( circleCenter, radius, topRight, botRight );
+			var circleBRBL:Boolean = circleLineHitTest( circleCenter, radius, botRight, botLeft );
+			var circleBLTL:Boolean = circleLineHitTest( circleCenter, radius, botLeft, topLeft);
+			
+	//		trace("TestResult[",(pointRect ||	circleTLTR || 	circleTRBR || 	circleBRBL || circleBRBL),"] - point:", pointRect, "TLTR:", circleTLTR,"TRBR:", circleTRBR,"BRBL:",circleBRBL,"BLTL:", circleBRBL);
+			
+			
+			return  pointRect ||	circleTLTR || 	circleTRBR || 	circleBRBL || circleBRBL;		
+		}
+		private function getTranslatedPoint($center:Point,  $cos:Number, $sin:Number, $x:Number, $y:Number ):Point{
+				var tx:Number = $cos * $x - $sin * $y;
+				var ty:Number = $sin * $x + $cos * $y; 
+		//		trace("tx:",tx,"ty:",ty);
+				$center.x += tx;
+				$center.y += ty;
+				
+				return $center;
+		}
+		
+		
+		public function pointRectHitTest( $p:Point, $r:Number,  $p11:Point, $p21:Point, $p12:Point, $p22:Point ):Boolean{
+			
+			
+			
+			var result:Boolean = ( $p.x >= $p11.x) && ( $p.x <= $p21.x) && ( $p.y >= $p12.y) && ($p.y <= $p11.y);
+		//	trace( "PointRect - circle:", $p, "p11:", $p11, "p21:", $p21, "p12:", $p12, "p22:", $p22 , "result:", result);
+			return result;
+		}
+		
+		private function pointRectEntityHitTest($point:iEntity, $rect:iEntity):Boolean{
+			var p:Point = $point.getSpatial().position;
+			var rP:Point = $rect.getSpatial().position;
+			var hitSize:Point = $rect.getSpatial().hitSize;
+			var x1:Number = rP.x - hitSize.x/2;
+			var x2:Number = rP.x + hitSize.x/2;
+			var y1:Number = rP.y + hitSize.y/2;
+			var y2:Number = rP.y - hitSize.y/2;
+			 
+			var result:Boolean = pointRectHitTest( p, 0, new Point(x1,y1), new Point(x2,y1), new Point( x1,y2), new Point(x2,y2) );
+			return result;
+		}
+		
+		public function circleLineHitTest( $center:Point, $r:Number, $p1:Point, $p2:Point):Boolean{
+			
+			var localP1:Point = new Point($p1.x - $center.x, $p1.y - $center.y);
+			var localP2:Point = new Point($p2.x - $center.x, $p2.y - $center.y);
+			
+			var P2minusP1:Point = new Point(localP2.x - localP1.x, localP2.y - localP1.y);
+			
+			var a:Number = ( P2minusP1.x) * (P2minusP1.x) + (P2minusP1.y) *(P2minusP1.y);
+			var b:Number = 2 * ((P2minusP1.x * localP1.x) + (P2minusP1.y * localP1.y));
+			var c:Number = (localP1.x * localP1.x) + (localP1.y * localP1.y) - ($r * $r);
+			var delta:Number = b * b - ( 4 * a * c );
+			
+	//		trace("CircleLine - circle:", $center, "p1:", localP1, "p2:", localP2, "delta:", delta);
+
+			if( delta < 0 )
+				return false;
+			else if( delta == 0){
+				var u:Number = -b / (2*a);
+		//		trace("U:", u );
+				if( u <= 1 && u >= 0 )
+					return true
+				else
+					return false;
+			}else if( delta > 0 ){
+				var sqrtDelta = Math.sqrt( delta );
+				var u1:Number = ( -b + sqrtDelta ) / ( 2 * a);
+				var u2:Number = ( -b - sqrtDelta ) / ( 2* a);
+	//			trace("u1:",u1,"u2:",u2);
+				if( (u1 >= 0 && u1 <= 1) || ( u2 >=0 && u2 <= 1) )
+					return true;
+				else
+					return false;
+			}
+			return false;
+		}
+		
+		
+		public function hitTest($entity1:iEntity, $entity2:iEntity):Boolean{
+		//	trace("HIT TEST - ",$entity1.getSpatial().hitType," vs ", $entity2.getSpatial().hitType);
+			if( $entity1.getSpatial().hitType == "point" && $entity2.getSpatial().hitType == "rect"){
+				return pointRectEntityHitTest($entity1, $entity2);
+			}else if ($entity2.getSpatial().hitType == "point" && $entity1.getSpatial().hitType == "rect"){
+				return pointRectEntityHitTest($entity2, $entity1);
+			}else if( $entity1.getSpatial().hitType == "rect" && $entity2.getSpatial().hitType == "rect"){
+				var pos1:Point = $entity1.getSpatial().position;
+				pos1.x += $entity1.getSpatial().hitPositoinOffset.x;
+				pos1.y += $entity1.getSpatial().hitPositoinOffset.y;
+				var hitSize1:Point = $entity1.getSpatial().hitSize;
+				var rect1:Rectangle = new Rectangle( pos1.x - hitSize1.x/2, pos1.y - hitSize1.y/2, hitSize1.x, hitSize1.y);
+			
+				var pos2:Point = $entity2.getSpatial().position;
+				pos2.x += $entity2.getSpatial().hitPositoinOffset.x;
+				pos2.y += $entity2.getSpatial().hitPositoinOffset.y;
+				var hitSize2:Point = $entity2.getSpatial().hitSize;
+				var rect2:Rectangle = new Rectangle( pos2.x - hitSize2.x/2, pos2.y - hitSize2.y/2, hitSize2.x, hitSize2.y);
+				
+				return rectHitTest( rect1, rect2 );
+			}else if( $entity1.getSpatial().hitType == "circle" && $entity2.getSpatial().hitType == "circle"){
+				var p1:Point = $entity1.getSpatial().position;
+				var p2:Point = $entity2.getSpatial().position;
+				var dist:Number = Point.distance(p1,p2);
+				
+				var r1:Number = $entity1.getSpatial().hitRadius;
+				var r2:Number = $entity2.getSpatial().hitRadius;
+
+				return dist < (r1+r2);
+			}else if( $entity1.getSpatial().hitType == "circle" && $entity2.getSpatial().hitType == "rect"){
+				return circleRectHitTest( $entity1, $entity2); 
+			}else if( $entity2.getSpatial().hitType == "circle" && $entity1.getSpatial().hitType == "rect"){
+				return circleRectHitTest( $entity2, $entity1 );
+			}
+			throw new Error("[FE-HitTest] hitTest (", $entity1.getSpatial().hitType+","+$entity2.getSpatial().hitType+") not implemented");
+			return false;
+			
+		}
+		
+	}
+}

@@ -1,0 +1,146 @@
+package com.fantage.module.FE.Component
+{
+	import com.fantage.module.FE.Entity.iEntity;
+	
+	import flash.geom.Point;
+
+	public class SpatialComponent implements iComponent
+	{
+
+		private var _position:Point = new Point();
+		private var _hitSize:Point = new Point();
+		private var _hitPositoinOffset:Point = new Point();
+		private var _rotation:Number = 0;
+		private var _drawHit:Boolean = false;
+		
+		private var _render:RenderComponent;
+		
+		private var _hitType:String = "";
+		private var _hitRadius:Number = 0;
+		
+		public function SpatialComponent()
+		{
+		}
+		
+	
+
+		public function get drawHit():Boolean{
+			return _drawHit;
+		}
+
+		public function set drawHit(value:Boolean):void{
+			_drawHit = value;
+		}
+
+		public function init():void{
+			_render = owner.getRender();
+			if( _render ){
+				_render.changePosition(_position);
+				_render.changeRotation(_rotation);
+			}
+
+		}
+		
+		public function inited():void{
+			
+		}
+		public function applySpatialToRender():void{
+			if( _render ){
+				_render.changePosition(_position);
+				_render.changeRotation(_rotation);
+			}
+		}
+		
+		public function set position($p:Point):void{
+			_position = $p;
+			if( _render )
+				_render.changePosition( _position );
+		}
+		public function get position():Point{
+			return _position.clone();
+		}
+		
+		public function set hitSize($s:Point):void{
+			_hitType = "rect";
+			_hitSize = $s;
+		}
+		public function get hitSize():Point{
+			return _hitSize;
+		}
+		
+		public function set hitPositoinOffset($p:Point):void{
+			_hitPositoinOffset = $p;
+		}
+		public function get hitPositoinOffset():Point{
+			return _hitPositoinOffset;
+		}
+		
+		public function set rotation($r:Number):void{
+			_rotation = $r;
+			if( _render )
+				_render.changeRotation( _rotation );
+		}
+		public function get rotation():Number{
+			return _rotation;
+		}
+		
+		
+		
+		
+		public function get hitRadius():Number{
+			return _hitRadius;
+		}
+		
+		public function set hitRadius(value:Number):void{
+			_hitType = "circle";
+			_hitRadius = value;
+		}
+		
+		public function get hitType():String{
+			return _hitType;
+		}
+		
+		public function set hitType(value:String):void{
+			_hitType = value;
+		}
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		//iComponent
+		private var _name:String;
+		private var _owner:iEntity;
+		public function destroy():void{
+			_render = null;
+			_owner = null;
+		}
+		public function set owner($owner:iEntity):void{
+			_owner = $owner;
+		}
+		public function get owner():iEntity{
+			return _owner;
+		}
+		public function set name($name:String):void{
+			
+		}
+		public function get name():String{
+			return _name;
+		}
+	}
+}

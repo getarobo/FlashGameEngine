@@ -1,0 +1,104 @@
+package com.fantage.module.FE.Component
+{
+	import com.fantage.module.FE.Entity.iEntity;
+	import com.fantage.module.FE.FE;
+
+	public class ControlComponent implements iComponent
+	{
+		
+		private var _name:String = "";
+		private var _owner:iEntity;
+		
+		private var _spatial:SpatialComponent;
+		private var _render:RenderComponent;
+
+		private var _registered:Boolean = false;
+		
+		
+		public function ControlComponent()
+		{
+		}
+		
+		public function init():void{
+			_spatial = owner.getSpatial();
+			_render = owner.getRender();
+			if(  _registered )
+				FE.processManager.registerControl( this );
+			inited();
+		}
+		
+		public function registerToProcessManager():void{
+			_registered = true;
+			
+		}		
+		public function unregisterToProcessManager():void{
+			FE.processManager.unregisterControl( this );
+		}
+		
+		public function onTick():void{
+		
+		} 
+		public function onSpatialTick():void{
+		
+		}
+		public function onControlTick():void{
+		
+		}
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		//init
+		public function inited():void{
+		
+		}
+		
+		public function set spatial($spatial:SpatialComponent):void{
+			_spatial = $spatial;
+		}
+		public function get spatial():*{
+			return _spatial;
+		}
+		public function set render($render:RenderComponent):void{
+			_render = $render;
+		}
+		public function get render():*{
+			return _render;
+		}
+				
+		public function destroyed():void{
+		
+		}
+		
+		
+		//iComponent		
+		public function destroy():void{
+			destroyed();
+			if( _registered )
+				FE.processManager.unregisterControl( this );
+			_owner = null;
+			_render = null;
+			_spatial = null;
+		}
+		public function set owner($owner:iEntity):void{
+			_owner = $owner;
+		}
+		public function get owner():iEntity{
+			return _owner;
+		}
+		public function set name($name:String):void{
+			_name = $name;
+		}
+		public function get name():String{
+			return _name;
+		}
+		
+	}
+}
